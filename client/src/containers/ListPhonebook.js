@@ -2,9 +2,7 @@ import React, { Component } from 'react'
 import ItemPhonebook from './Phonebook'
 import { connect } from 'react-redux'
 import { loadPhonebook } from '../actions'
-import SearchPhonebook from './SearchPhonebook'
-import { handleChangeNameSearch } from './SearchPhonebook'
-import { handleChangePhoneSearch } from './SearchPhonebook'
+
 
 class ListPhonebook extends Component {
     constructor(props) {

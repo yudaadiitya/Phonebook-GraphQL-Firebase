@@ -1,10 +1,9 @@
-import axios from 'axios'
+import ApolloClient from 'apollo-boost';
+import gql from 'graphql-tag';
+const API_URL = 'http://localhost:3001/graphql/'
 
-const API_URL = 'http://localhost:3001/api/'
-
-const request = axios.create({
-    baseURL: API_URL,
-    timeout: 1000
+const client = new ApolloClient({
+    uri: API_URL
 });
 
 //========== LOAD PHONEBOOK DATA
@@ -18,10 +17,20 @@ export const loadPhonebookFailure = () => ({
 })
 
 export const loadPhonebook = () => {
+    const phonebookQuery = gql`
+    query {
+        phonebooks{
+            id
+            name
+            phone
+        }
+    }`;
     return dispatch => {
-        return request.get('phonebooks')
+        return client.query({
+            query: phonebookQuery,
+        })
             .then(function (response) {
-                dispatch(loadPhonebookSuccess(response.data))
+                dispatch(loadPhonebookSuccess(response.data.phonebooks))
             })
             .catch(function (error) {
                 console.error(error);
@@ -40,25 +49,45 @@ export const addPhonebookSuccess = (phonebooks) => ({
 })
 
 export const addPhonebookFailure = (id) => ({
-    type: 'ADD_PHONEBOOK_FAILURE', id
+    type: 'ADD_PHONEBOOK_FAILURE',
+    id
 })
 
 const addPhonebookRedux = (id, name, phone) => ({
-    type: 'ADD_PHONEBOOK', id, name, phone
+    type: 'ADD_PHONEBOOK',
+    id,
+    name,
+    phone
 })
 
 
 export const addPhonebook = (name, phone) => {
-    let id = Date.now();
+    const id = Date.now();
+    const addQuery = gql`
+    mutation addContact($id: ID!, $name: String!, $phone: String!) {
+            addContact(id: $id, name: $name, phone: $phone) {
+                id
+                name
+                phone
+            }
+        }`;
     return dispatch => {
         dispatch(addPhonebookRedux(id, name, phone))
-        return request.post('phonebooks', { id, name, phone })
+        return client.mutate({
+            mutation: addQuery,
+            variables: {
+                id,
+                name,
+                phone
+            }
+        })
             .then(function (response) {
+                console.log(response)
                 dispatch(addPhonebookSuccess(response.data))
             })
             .catch(function (error) {
                 console.error(error);
-                dispatch(addPhonebookFailure(id))
+                dispatch(addPhonebookFailure())
             });
     }
 }
@@ -83,9 +112,20 @@ export const deletePhonebookFailure = () => ({
 
 
 export const deletePhonebook = (id) => {
+    const deleteQuery = gql`
+    mutation removeContact($id: ID!) {
+        removeContact(id: $id){
+            id
+        }
+    }`;
     return dispatch => {
         dispatch(deletePhonebookRedux(id))
-        return request.delete(`phonebooks/${id}`)
+        return client.mutate({
+            mutation: deleteQuery,
+            variables: {
+                id
+            }
+        })
             .then(function (response) {
                 dispatch(deletePhonebookSuccess())
             })
@@ -113,8 +153,23 @@ export const resendPhonebookFailure = () => ({
 
 
 export const resendPhonebook = (id, name, phone) => {
+    const addQuery = gql`
+    mutation updateContact($id: ID!, $name: String!, $phone: String!) {
+        addContact(id: $id, name: $name, phone: $phone) {
+            id
+            name
+            phone
+        }
+}`;
     return dispatch => {
-        return request.post('phonebooks', { id, name, phone })
+        return client.mutate({
+            mutation: addQuery,
+            variables: {
+                id,
+                name,
+                phone
+            }
+        })
             .then(function (response) {
                 dispatch(resendPhonebookSuccess(id))
             })
@@ -148,10 +203,25 @@ const editPhonebookRedux = (id, name, phone) => ({
 });
 
 export const editPhonebook = (id, name, phone) => {
+    console.log(id,name,phone);
+    const updateQuery = gql`
+    mutation updateContact($id: ID!, $name: String!, $phone: String!) {
+            updateContact(id: $id, name: $name, phone: $phone) {
+                id
+                name
+                phone
+            }
+        }`;
     return dispatch => {
         dispatch(editPhonebookRedux(id, name, phone));
-        return request
-            .put(`phonebooks/${id}`, { name, phone })
+        return client.mutate({
+            mutation: updateQuery,
+            variables: {
+                id,
+                name,
+                phone
+            }
+        })
             .then(response => {
                 dispatch(editPhonebookSuccess(response.data));
             })

@@ -82,11 +82,11 @@ export default class ItemContact extends Component {
     }
 
     edit() {
-        let { index } = this.props;
+        let { no } = this.props;
 
         return (
             <tr>
-                <td>{index}</td>
+                <td>{no + 1}</td>
                 <td>
                     <input
                         className="form-control"

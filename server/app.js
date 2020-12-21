@@ -37,7 +37,7 @@ const contactSchema = require('./graphql').contactSchema;
 app.use('/graphql', cors(), graphqlHTTP({
     schema: contactSchema,
     rootValue: global,
-    graphiql: false
+    graphiql: true
 }));
 
 
